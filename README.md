@@ -9,47 +9,37 @@ Other GNOME versions are not supported by this release.
 
 ## Install
 
-1. Install the desktop tools and Python:
+Using an agent? Give it this repository link and ask:
+
+> Install Headroom for my Ubuntu desktop, including local cost estimates.
+
+Or do it yourself:
+
+1. Download **install.py** from the [latest release](https://github.com/steveclarke/gnome-headroom/releases/latest).
+2. Open a terminal and run:
 
    ```sh
-   sudo apt install gnome-shell-extension-prefs python3
-   gnome-shell --version
+   python3 ~/Downloads/install.py --costs
    ```
 
-   The version must be 46.x. Use the account that runs your GNOME desktop.
+3. Log out of Ubuntu and log back in. Headroom appears in the top bar.
 
-2. Download `headroom@steveclarke.github.io.zip` from the
-   [latest release](https://github.com/steveclarke/gnome-headroom/releases/latest).
-   Keep it as a ZIP, then run:
+The installer checks GNOME compatibility, downloads and verifies the extension,
+and enables it for your next login. `--costs` also sets up the optional cost reader;
+it may ask for your password to install the Settings app or Node.js through Ubuntu. Omit `--costs`
+if you only want quotas. Run it as your normal desktop user, without sudo.
 
-   ```sh
-   gnome-extensions install --force ~/Downloads/headroom@steveclarke.github.io.zip
-   ```
+Prefer to install the ZIP yourself? See [manual installation](#manual-installation).
 
-3. Log out of Ubuntu and log back in. Open a terminal and enable Headroom:
+## Your existing accounts
 
-   ```sh
-   gnome-extensions enable headroom@steveclarke.github.io
-   gnome-extensions info headroom@steveclarke.github.io
-   ```
+**Just make sure you're already logged in to Claude Code and/or Codex on this
+computer.** Headroom uses those existing logins. You do not need to sign in again
+or connect your accounts to Headroom.
 
-   The status should say `ACTIVE`. Click the provider icons in the top bar.
-   No compilation or separate binary is needed.
-
-## Connect your accounts
-
-Install and sign in to [Claude Code](https://code.claude.com/docs/en/setup) and/or
-[Codex CLI](https://developers.openai.com/codex/cli/) on this same machine:
-
-```sh
-claude auth login
-codex login
-```
-
-Headroom uses those existing sign-ins. Do not send anyone your credential files.
-The Codex executable must be discoverable by the desktop collector; if a terminal
-can run it but Headroom cannot, see [troubleshooting](#troubleshooting).
-You can turn off either provider in Settings.
+Headroom cannot retrieve quota information from a provider unless you are logged
+in to it. If a provider is unavailable, open its CLI and check that it works, then
+refresh Headroom. Turn off any provider you do not use in Settings.
 
 ## Use
 
@@ -70,21 +60,14 @@ Costs estimate the API-equivalent USD value of your local CLI history. They are
 not subscription charges and do not include history on other computers.
 Quota readings work without this setup; turn off Show costs if you do not need it.
 
-Install Node and [Bun](https://bun.sh/docs/installation), then run the bundled setup:
-
-```sh
-sudo apt install nodejs
-~/.local/share/gnome-shell/extensions/headroom@steveclarke.github.io/bin/setup-costs
-```
-
-The setup installs the locked `ccusage` version without package install scripts.
-It does not overwrite an existing mismatched installation. Refresh Headroom after
-setup. If Bun was just installed, open a new terminal first so it is on PATH.
+If you installed with `--costs`, this is already set up. To add it later, run the
+same installer with `--costs`. It uses a temporary, checksum-verified Bun download
+to install the locked cost reader. You do not need to install Bun yourself or find
+the extension's folder. Existing CLI logins and history stay in place.
 
 ## Update or remove
 
-To update, install the new release ZIP with the same `--force` command, then log
-out and back in. Settings and CLI sign-ins remain separate from the extension.
+To update, run the installer again, then log out and back in. Settings and CLI sign-ins remain separate from the extension.
 
 To remove:
 
@@ -95,6 +78,25 @@ gnome-extensions uninstall headroom@steveclarke.github.io
 
 This leaves your CLI accounts and history alone. The optional reader is stored
 under `~/.local/share/headroom/` (or your XDG data directory).
+
+## Manual installation
+
+Download the extension ZIP from the latest release, then run:
+
+```sh
+gnome-extensions install --force ~/Downloads/headroom@steveclarke.github.io.zip
+```
+
+Log out and back in, then enable it:
+
+```sh
+gnome-extensions enable headroom@steveclarke.github.io
+gnome-extensions info headroom@steveclarke.github.io
+```
+
+The status should say `ACTIVE`. On Ubuntu, install `gnome-shell-extension-prefs`
+if the Settings window is unavailable. Manual cost setup is still available as
+`bin/setup-costs` in the installed extension; it requires Node.js and Bun.
 
 ## Troubleshooting
 

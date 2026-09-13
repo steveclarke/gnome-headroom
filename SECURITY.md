@@ -21,3 +21,8 @@ built from an explicit file list and contains no account data or local history.
 Do not attach credentials, raw usage reports, session logs, or screenshots with
 private data to issues. Report suspected vulnerabilities privately through
 [GitHub's security advisory form](https://github.com/steveclarke/gnome-headroom/security/advisories/new).
+
+The optional installer downloads the public release over HTTPS and checks its
+SHA256SUMS. With `--costs`, it uses a checksum-pinned temporary Bun executable to
+set up the locked cost reader. It can ask Ubuntu to install missing Settings/Node
+packages using sudo; the extension itself runs without elevated privileges.

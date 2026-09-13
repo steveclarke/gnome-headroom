@@ -10,7 +10,8 @@ provider workers every five minutes, with bounded output and execution time.
 Disabling the extension stops its timers and collector process groups.
 
 Run `node --test tests/*.test.cjs`, `python3 gnome/tests/check-collectors`,
-`python3 gnome/tests/security.py`, and `python3 gnome/tests/check-package.py`.
+`python3 gnome/tests/security.py`, `python3 gnome/tests/test-collector-regressions.py`,
+`python3 gnome/tests/test-installer.py`, and `python3 gnome/tests/check-package.py`.
 The package check requires a completed build. The collector check uses an empty
 home and makes no authenticated provider calls.
 
@@ -33,5 +34,5 @@ with `gnome-extensions info headroom@steveclarke.github.io` and errors with
 
 Update the integer version in `gnome/metadata.json`, commit, and push a tag such
 as `v1.0.1`. GitHub Actions runs the checks, builds the extension ZIP, and publishes
-a release with SHA256SUMS. The tag suffix is the user-facing release version;
+a release with the installer and SHA256SUMS. The tag suffix is the user-facing release version;
 GNOME uses the separate monotonically increasing metadata version.

@@ -7,6 +7,7 @@ import tempfile
 import zipfile
 
 root = Path(__file__).resolve().parents[2]
+assert (root / 'build/install.py').read_bytes() == (root / 'install.py').read_bytes()
 metadata = json.loads((root / 'gnome/metadata.json').read_text())
 expected = set('extension.js UsageService.js prefs.js stylesheet.css metadata.json providers.json LICENSE NOTICE'.split())
 expected.update('assets/' + name for name in ('claude.svg', 'openai.svg', 'claude-symbolic.svg', 'openai-symbolic.svg'))

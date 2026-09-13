@@ -21,6 +21,8 @@ jobs:
           node --test tests/*.test.cjs
           python3 gnome/tests/check-collectors
           python3 gnome/tests/security.py
+          python3 gnome/tests/test-collector-regressions.py
+          python3 gnome/tests/test-installer.py
       - name: Scan history for secrets
         run: |
           curl --fail --silent --show-error --location https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o /tmp/gitleaks.tar.gz
@@ -32,12 +34,13 @@ jobs:
           ./gnome/build.sh
           python3 gnome/tests/check-package.py
           cd build
-          sha256sum headroom@steveclarke.github.io.zip > SHA256SUMS
+          sha256sum headroom@steveclarke.github.io.zip install.py > SHA256SUMS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: extension
           path: |
             build/*.zip
+            build/install.py
             build/SHA256SUMS
           if-no-files-found: error
   release:
@@ -57,4 +60,4 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$RELEASE_TAG" build/*.zip build/SHA256SUMS --verify-tag --title "Headroom $RELEASE_TAG" --notes 'GNOME Shell extension for Ubuntu 24.04 / GNOME 46. Download the extension ZIP and follow the installation instructions in the README. No compilation required. SHA256SUMS is included for download verification.'
+          gh release create "$RELEASE_TAG" build/*.zip build/install.py build/SHA256SUMS --verify-tag --title "Headroom $RELEASE_TAG" --notes 'GNOME Shell extension for Ubuntu 24.04 / GNOME 46. Download install.py and run python3 ~/Downloads/install.py --costs, then log out and back in. Existing Claude/Codex logins are reused. The extension ZIP is also available for manual installation. No compilation required. SHA256SUMS is included for download verification.'

@@ -49,4 +49,5 @@ with tempfile.TemporaryDirectory(prefix='assemble-', dir=output) as temporary:
         for path in sorted(stage.rglob('*')):
             if path.is_file():
                 bundle.write(path, path.relative_to(stage))
+    shutil.copy2(root / 'install.py', output / 'install.py')
     print(archive)
