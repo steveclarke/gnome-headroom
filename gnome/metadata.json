@@ -1,0 +1,11 @@
+{
+  "uuid": "headroom@steveclarke.github.io",
+  "name": "Headroom",
+  "description": "Claude Code and Codex quota forecasts and local cost estimates.",
+  "shell-version": [
+    "46"
+  ],
+  "version": 3,
+  "settings-schema": "org.gnome.shell.extensions.headroom",
+  "url": "https://github.com/steveclarke/gnome-headroom"
+}

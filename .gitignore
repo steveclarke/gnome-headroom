@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+*.log
+*.pid
+.DS_Store
+node_modules/
+__pycache__/
+.cache/
+coverage/
+tmp/
+local/
+.impeccable/
+
+build/

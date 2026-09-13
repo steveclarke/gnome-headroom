@@ -1,0 +1,21 @@
+.headroom-bar { spacing: 8px; }
+.headroom-provider { spacing: 3px; }
+.headroom-icon { -st-icon-style: symbolic; padding: 0; }
+.headroom-demo { font-size: 9px; }
+.headroom-section { width: 360px; spacing: 12px; padding: 8px 18px; }
+.headroom-group { spacing: 8px; padding: 6px 0; }
+.headroom-heading { font-weight: bold; }
+.headroom-heading-row { spacing: 8px; }
+.headroom-quota { spacing: 4px; }
+.headroom-muted { font-size: 11px; }
+.headroom-warning { font-size: 11px; }
+.headroom-footer { spacing: 8px; }
+.headroom-button { padding: 5px 10px; }
+.headroom-periods { spacing: 4px; }
+.headroom-periods .button:checked { background-color: rgba(128,128,128,0.35); }
+.headroom-cost-data { spacing: 20px; }
+.headroom-legend { spacing: 12px; }
+
+.headroom-scroll { max-height: 640px; }
+
+.headroom-scroll .headroom-section { width: 350px; padding-right: 28px; }

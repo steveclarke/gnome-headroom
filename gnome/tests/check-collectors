@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Check the vendored collectors without credentials, history, or provider calls."""
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+
+root = Path(__file__).resolve().parents[2]
+with tempfile.TemporaryDirectory(prefix='headroom-gnome-test-') as temporary:
+    stage = Path(temporary)
+    shutil.copytree(root / 'gnome/collectors', stage / 'collectors')
+    shutil.copy(root / 'providers.json', stage / 'providers.json')
+    home = stage / 'home'
+    home.mkdir()
+    env = {'HOME': str(home), 'PATH': '/usr/bin:/bin',
+           'XDG_CONFIG_HOME': str(home / '.config'),
+           'XDG_CACHE_HOME': str(home / '.cache'),
+           'XDG_DATA_HOME': str(home / '.local/share')}
+    # Keep this check independent of a machine's installed/signed-in Codex CLI.
+    runner = stage / 'collectors/omarchy-agent-usage-codex'
+    source = runner.read_text()
+    needle = 'codex = find_command("codex")'
+    assert source.count(needle) == 1
+    runner.write_text(source.replace(needle, 'codex = None'))
+    report = subprocess.run(['/usr/bin/python3', str(stage / 'collectors/headroom-collect'),
+                             '--providers', 'claude', 'codex'],
+                            env=env, capture_output=True, text=True, check=True, timeout=70)
+    validator = '''
+const fs = require('node:fs');
+const vm = require('node:vm');
+const wire = vm.createContext({});
+vm.runInContext(fs.readFileSync(process.argv[1], 'utf8'), wire);
+const report = wire.parse(fs.readFileSync(0, 'utf8'), false, ['claude', 'codex']);
+for (const p of report.providers) {
+  if (p.state !== 'unavailable' || !p.message.includes('login') || p.windows.length)
+    throw new Error(`Expected unavailable with login hint for ${p.id}`);
+}
+console.log('PASS: logged-out Claude and missing Codex produce a Wire.js-valid report');
+'''
+    subprocess.run(['/usr/bin/node', '-e', validator, str(root / 'Wire.js')],
+                   input=report.stdout, text=True, check=True)

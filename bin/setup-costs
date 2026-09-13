@@ -1,0 +1,119 @@
+#!/usr/bin/python3 -I
+"""Install the locked reader in a new directory; never overwrite an existing tree."""
+from pathlib import Path
+import json
+import os
+import re
+import secrets
+import shutil
+import stat
+import subprocess
+import sys
+
+
+def open_directory(path):
+    """Hold each parent while walking; refuse redirected or writable parents."""
+    if not path.is_absolute() or '..' in path.parts:
+        raise ValueError("XDG_DATA_HOME must be an absolute directory")
+    fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for part in path.parts[1:]:
+            try:
+                os.mkdir(part, 0o700, dir_fd=fd)
+            except FileExistsError:
+                pass
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd)
+            os.close(fd)
+            fd = child
+            info = os.fstat(fd)
+            # Root-owned sticky /tmp is useful for isolated installation tests.
+            sticky_root = info.st_uid == 0 and info.st_mode & stat.S_ISVTX
+            if info.st_uid not in (0, os.geteuid()) or (info.st_mode & 0o022 and not sticky_root):
+                raise ValueError("Refusing an unsafe installation directory")
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def read_file(fd, name):
+    source = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, dir_fd=fd)
+    with os.fdopen(source, 'rb') as stream:
+        info = os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.geteuid() or info.st_mode & 0o022 or info.st_size > 65536:
+            raise ValueError("Refusing unsafe installation metadata")
+        data = stream.read(65537)
+        if len(data) > 65536:
+            raise ValueError("Installation metadata too large")
+        return data
+
+
+def install():
+    bun = shutil.which('bun')
+    if not bun:
+        raise ValueError("Install Bun, then run bin/setup-costs again.")
+    runtime = Path(__file__).resolve().parents[1] / 'runtime'
+    contents = {name: (runtime / name).read_bytes() for name in ('package.json', 'bun.lock')}
+    version = json.loads(contents['package.json'])['dependencies']['ccusage']
+    if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
+        raise ValueError("Expected an exact cost-reader version")
+    data = Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share')))
+    directory = open_directory(data / 'headroom')
+    stage = None
+    stage_fd = None
+    try:
+        name = 'ccusage-' + version
+        try:
+            existing = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
+        except FileNotFoundError:
+            existing = None
+        if existing is not None:
+            try:
+                if all(read_file(existing, key) == value for key, value in contents.items()):
+                    try:
+                        info = os.stat('node_modules/ccusage/src/cli.js', dir_fd=existing)
+                        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid():
+                            raise FileNotFoundError()
+                        subprocess.run(['/usr/bin/node', '/proc/self/fd/' + str(existing) + '/node_modules/ccusage/src/cli.js', '--version'],
+                                       pass_fds=(existing,), timeout=10, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    except (OSError, subprocess.SubprocessError) as exc:
+                        raise ValueError('Reader files are missing or unsafe. Move the existing ccusage-' + version + ' directory aside, then rerun setup; no files were overwritten.') from exc
+                    print('The pinned cost reader is already installed; no files changed.')
+                    return
+            finally:
+                os.close(existing)
+            raise ValueError("Existing installation differs; refusing to overwrite it")
+        stage = '.install-' + secrets.token_hex(16)
+        os.mkdir(stage, 0o700, dir_fd=directory)
+        stage_fd = os.open(stage, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
+        for key, value in contents.items():
+            fd = os.open(key, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600, dir_fd=stage_fd)
+            with os.fdopen(fd, 'wb') as stream:
+                stream.write(value)
+                stream.flush()
+                os.fsync(stream.fileno())
+        # The child inherits the held directory, so renamed parents cannot
+        # redirect Bun's writes. Lock hashes bind the optional native packages.
+        location = '/proc/self/fd/' + str(stage_fd)
+        subprocess.run([bun, 'install', '--cwd', location, '--frozen-lockfile', '--ignore-scripts'],
+                       pass_fds=(stage_fd,), timeout=180, check=True)
+        subprocess.run(['/usr/bin/node', location + '/node_modules/ccusage/src/cli.js', '--version'],
+                       pass_fds=(stage_fd,), timeout=10, check=True)
+        # rename refuses a symlink/file or populated destination directory.
+        os.rename(stage, name, src_dir_fd=directory, dst_dir_fd=directory)
+        os.fsync(directory)
+        stage = None
+        print('Installed ccusage ' + version + '.')
+    finally:
+        if stage_fd is not None:
+            os.close(stage_fd)
+        if stage is not None:
+            shutil.rmtree(stage, dir_fd=directory)
+        os.close(directory)
+
+
+if __name__ == '__main__':
+    try:
+        install()
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+        sys.exit('Cost reader setup failed: ' + str(error))
