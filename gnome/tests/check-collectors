@@ -37,5 +37,5 @@ for (const p of report.providers) {
 }
 console.log('PASS: logged-out Claude and missing Codex produce a Wire.js-valid report');
 '''
-    subprocess.run(['/usr/bin/node', '-e', validator, str(root / 'Wire.js')],
+    subprocess.run([shutil.which('node') or 'node', '-e', validator, str(root / 'Wire.js')],
                    input=report.stdout, text=True, check=True)
