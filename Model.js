@@ -14,6 +14,46 @@ function percentage(window, now) {
   return Math.round(Math.max(0, Math.min(1, 1 - window.used)) * 100) + "%"
 }
 
+// Windows the top bar may show, in display order. Unknown IDs are dropped and
+// an empty choice falls back to the weekly headline.
+var BAR_WINDOWS = ["session", "weekly"]
+function barWindows(value) {
+  var ids = BAR_WINDOWS.filter(function(id) { return Array.isArray(value) && value.indexOf(id) >= 0 })
+  return ids.length ? ids : ["weekly"]
+}
+
+// Short window name for the top bar: derived from the duration so it stays
+// stable across providers ("5h", "7d"), falling back to the window title.
+function shortTitle(window) {
+  if (!window) return ""
+  var ms = window.durationMs
+  if (typeof ms === "number" && isFinite(ms) && ms > 0) {
+    var hours = Math.round(ms / 3600000)
+    if (hours >= 24 && hours % 24 === 0) return (hours / 24) + "d"
+    if (hours >= 1) return hours + "h"
+  }
+  return typeof window.title === "string" ? window.title : ""
+}
+
+// Top-bar text for one provider: the selected windows in order. Labels appear
+// only when more than one window is shown. A missing window is skipped; with
+// none available the bar shows a dash. decorate(window) may add a per-window
+// suffix such as a stale mark or a flame.
+function barText(provider, windowIds, now, decorate) {
+  var parts = []
+  var ids = Array.isArray(windowIds) ? windowIds : []
+  for (var i = 0; i < ids.length; i++) {
+    var window = find(provider, ids[i])
+    if (!window) continue
+    var suffix = decorate ? decorate(window) || "" : ""
+    parts.push({label: shortTitle(window), text: percentage(window, now) + suffix})
+  }
+  if (!parts.length) return "—"
+  return parts.map(function(part) {
+    return parts.length > 1 && part.label ? part.label + " " + part.text : part.text
+  }).join(" · ")
+}
+
 function find(provider, id) {
   var list = provider ? provider.windows || [] : []
   for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]

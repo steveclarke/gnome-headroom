@@ -45,6 +45,8 @@ refresh Headroom. Turn off any provider you do not use in Settings.
 
 - Click the bar to see quota windows, reset countdowns, and forecasts.
 - Click the gear for provider enablement, top-bar visibility, order, and costs.
+  Under **Top bar**, choose which quota windows sit next to each icon: the weekly
+  window (default), the 5-hour session window, or both, shown as `5h 74% · 7d 61%`.
 - Click Refresh, or right-click the bar, to request an update. Automatic updates
   run every five minutes; repeated manual requests are limited to one per 20 seconds.
 - A dash means unavailable; `!` marks stale data. Forecasts need a known window

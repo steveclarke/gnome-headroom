@@ -8,7 +8,7 @@ export default class HeadroomPreferences extends ExtensionPreferences {
         const settings = this.getSettings();
         const page = new Adw.PreferencesPage({title: 'Headroom', icon_name: 'view-list-symbolic'});
         const providers = new Adw.PreferencesGroup({title: 'Providers',
-            description: 'Enabled providers collect usage and appear in details. Top bar adds their weekly percentage.'});
+            description: 'Enabled providers collect usage and appear in details. Top bar adds their remaining percentage.'});
         const rows = new Map();
         const names = {claude: 'Claude Code', codex: 'Codex'};
         const connections = [];
@@ -51,6 +51,23 @@ export default class HeadroomPreferences extends ExtensionPreferences {
         reorder();
         connections.push(settings.connect('changed::provider-order', reorder));
         page.add(providers);
+        const bar = new Adw.PreferencesGroup({title: 'Top bar',
+            description: 'Quota windows shown next to each provider icon. With both on, the bar reads "5h 74% · 7d 61%".'});
+        const windows = {session: ['5-hour window', 'Session quota, resets every five hours.'],
+            weekly: ['Weekly window', 'Seven-day quota. The default headline.']};
+        const chosen = () => settings.get_strv('bar-windows');
+        for (const [id, [title, subtitle]] of Object.entries(windows)) {
+            const row = new Adw.SwitchRow({title, subtitle, active: chosen().includes(id)});
+            row.connect('notify::active', () => {
+                const next = chosen().filter(item => item !== id);
+                if (row.active) next.push(id);
+                if (next.length) settings.set_strv('bar-windows', next);
+                else row.active = true;
+            });
+            connections.push(settings.connect('changed::bar-windows', () => { row.active = chosen().includes(id); }));
+            bar.add(row);
+        }
+        page.add(bar);
         const costs = new Adw.PreferencesGroup({title: 'Cost estimates',
             description: 'Estimated value of local usage in USD. Optional cost reader setup is required for live estimates.'});
         const enabled = new Adw.SwitchRow({title: 'Show costs'});
