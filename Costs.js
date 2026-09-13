@@ -12,8 +12,9 @@ function dayKey(now, offset) {
 
 function amount(doc, id, period, now) {
   var p = doc && doc.providers.filter(function(p) { return p.id === id })[0]
-  if (!p || (p.state !== "fresh" && p.state !== "partial") || typeof doc.observedAt !== "number" || !isFinite(doc.observedAt)
-      || doc.observedAt <= 0 || doc.observedAt > now + 5000 || now - doc.observedAt > 600000 || dayKey(doc.observedAt, 0) !== dayKey(now, 0)) return null
+  var observedAt = p && p.observedAt !== undefined ? p.observedAt : doc && doc.observedAt
+  if (!p || (p.state !== "fresh" && p.state !== "partial") || typeof observedAt !== "number" || !isFinite(observedAt)
+      || observedAt <= 0 || observedAt > now + 5000 || now - observedAt > 600000 || dayKey(observedAt, 0) !== dayKey(now, 0)) return null
   if (period < 2) return p.daily[dayKey(now, period === 0 ? 0 : -1)] || 0
   var sum = 0
   for (var i = 0; i < 30; i++) sum += p.daily[dayKey(now, -i)] || 0

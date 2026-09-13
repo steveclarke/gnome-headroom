@@ -98,3 +98,20 @@ test('costs follow IDs across reordering and a single provider can stand alone',
   assert.equal(costs.amount(doc, 'claude', 0, now), null);
   assert.equal(costs.total(costs.empty([]), 0, now), null);
 });
+
+
+test('independent provider observations preserve fresh amounts when another worker is unavailable or expired', () => {
+  const doc = costs.demo(now, 'normal');
+  delete doc.observedAt;
+  doc.providers[0].observedAt = now;
+  doc.providers[1].observedAt = 0;
+  doc.providers[1].state = 'unavailable';
+  assert.equal(costs.amount(doc, 'claude', 0, now), 84.2);
+  assert.equal(costs.total(doc, 0, now), null);
+  doc.providers[1].state = 'fresh';
+  doc.providers[1].observedAt = now - 600001;
+  assert.equal(costs.amount(doc, 'codex', 0, now), null);
+  assert.equal(costs.amount(doc, 'claude', 0, now), 84.2);
+  doc.providers[1].observedAt = now;
+  assert.equal(costs.total(doc, 0, now), 112.85);
+});

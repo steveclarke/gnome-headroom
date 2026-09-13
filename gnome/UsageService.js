@@ -45,7 +45,6 @@ export class UsageService {
             if (!ids.includes(id) || (kind === 'cost' && !costEnabled))
                 this.deadlines.delete(key);
         }
-        if (demo) this.setDemo();
         this.tick();
     }
 
@@ -78,7 +77,8 @@ export class UsageService {
         const now = Date.now();
         if (now - (this.lastManual || 0) < 20000) return;
         this.lastManual = now;
-        this.deadlines.clear();
+        for (const key of this.deadlines.keys())
+            if (!this.jobs.has(key)) this.deadlines.delete(key);
         this.tick();
     }
 

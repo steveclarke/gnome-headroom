@@ -235,7 +235,7 @@ export default class Headroom extends Extension {
     _costDocument() {
         const entries = this._ids.map(id => this._service.cost.get(id) ||
             {id, state: 'loading', daily: {}, observedAt: 0, message: 'Reading local usage…'});
-        return {observedAt: entries.length ? Math.min(...entries.map(p => p.observedAt)) : 0, providers: entries};
+        return {providers: entries};
     }
 
     _update() {

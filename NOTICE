@@ -54,3 +54,5 @@ SOFTWARE.
 
 GNOME port modifications: owner-only collector cache files and refusal of
 OAuth endpoint redirects. Original copyright and license retained above.
+Quota-only polling skips history scans; the Codex RPC reader uses bounded raw
+byte buffering to handle notifications and responses received together.

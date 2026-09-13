@@ -29,13 +29,8 @@ AGENT_ID = "codex"
 AGENT_NAME = "Codex"
 AUTH_HELP = "Run `codex login` to authenticate."
 
-# A scan this recent is only reused to dedup concurrent collector runs (the
-# update command backgrounds one per agent while the panel refreshes on its
-# own); every periodic widget refresh lands a real rescan, however low
-# refreshIntervalSec is set. --limits-only promises only fresh limits, so it
-# may reuse a scan for up to 15 minutes.
+# Reuse full-history scans briefly; quota-only polling skips them entirely.
 SCAN_REUSE_SECONDS = 20
-LIMITS_ONLY_REUSE_SECONDS = 900
 
 
 def local_day(value):
@@ -477,20 +472,32 @@ def rpc_request(proc, request_id, method, params=None, timeout=8):
   payload = {"id": request_id, "method": method, "params": params or {}}
   proc.stdin.write(json.dumps(payload) + "\n")
   proc.stdin.flush()
-  deadline = time.time() + timeout
-  while time.time() < deadline:
-    ready, _, _ = select.select([proc.stdout], [], [], 0.25)
+  deadline = time.monotonic() + timeout
+  # TextIOWrapper.readline() can prefetch the next response, hiding it from
+  # select(). Keep raw bytes across requests so notifications cannot strand it.
+  if not hasattr(proc, "_rpc_buffer"):
+    proc._rpc_buffer = bytearray()
+  pending = proc._rpc_buffer
+  while time.monotonic() < deadline:
+    if b"\n" in pending:
+      line, _, rest = pending.partition(b"\n")
+      pending[:] = rest
+      try:
+        message = json.loads(line)
+      except (ValueError, UnicodeError, RecursionError):
+        continue
+      if isinstance(message, dict) and message.get("id") == request_id:
+        return message
+      continue
+    ready, _, _ = select.select([proc.stdout], [], [], min(0.25, max(0, deadline - time.monotonic())))
     if not ready:
       continue
-    line = proc.stdout.readline()
-    if not line:
+    chunk = os.read(proc.stdout.fileno(), 65536)
+    if not chunk:
       break
-    try:
-      message = json.loads(line)
-    except Exception:
-      continue
-    if message.get("id") == request_id:
-      return message
+    pending.extend(chunk)
+    if len(pending) > 1048576:
+      raise ValueError("Codex response exceeds its size limit")
   raise TimeoutError(method)
 
 
@@ -572,17 +579,13 @@ def fetch_codex_rpc():
 
 def main():
   parser = argparse.ArgumentParser()
-  # --force rescans everything and rewrites the cache. --limits-only is kept
-  # for CLI compatibility with the panel's refreshLimits() call: only the
-  # limits probe must be fresh, so it may reuse a scan for far longer than a
-  # normal run, whose short window exists purely to dedup concurrent
-  # collector runs.
+  # Quota polling does not need local transcript statistics.
   parser.add_argument("--force", action="store_true")
   parser.add_argument("--limits-only", action="store_true")
   args = parser.parse_args()
 
-  max_age = 0 if args.force else (LIMITS_ONLY_REUSE_SECONDS if args.limits_only else SCAN_REUSE_SECONDS)
-  stats = cached_local_stats(max_age)
+  max_age = 0 if args.force else SCAN_REUSE_SECONDS
+  stats = {} if args.limits_only else cached_local_stats(max_age)
   rpc = fetch_codex_rpc()
 
   record = {
@@ -591,7 +594,7 @@ def main():
     "name": AGENT_NAME,
     "updatedAt": datetime.now(timezone.utc).isoformat(),
     "ready": True,
-    "hasLocalStats": True,
+    "hasLocalStats": not args.limits_only,
   }
   record.update(stats)
   record.update(rpc)
