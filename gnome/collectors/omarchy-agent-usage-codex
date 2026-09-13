@@ -73,6 +73,7 @@ def runtime_env():
     f"{home}/.local/bin",
     f"{home}/.npm-global/bin",
     f"{home}/.local/share/mise/shims",
+    "/home/linuxbrew/.linuxbrew/bin",
   ]
   env = os.environ.copy()
   env["PATH"] = os.pathsep.join(part for part in path_parts if part)

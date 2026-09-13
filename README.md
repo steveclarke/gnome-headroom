@@ -1,8 +1,8 @@
 # Headroom for GNOME Shell
 
 Claude Code and Codex quotas in your Ubuntu top bar, with reset countdowns,
-forecasts, and optional local cost estimates. Built for **Ubuntu 24.04 / GNOME 46**.
-Other GNOME versions are not supported by this release.
+forecasts, and optional local cost estimates. Built for **Ubuntu 24.04 / GNOME 46** and
+**Ubuntu 26.04 / GNOME 50**. Other GNOME versions are not supported by this release.
 
 ![Dark popup showing sample data](screenshots/details-dark.png)
 ![Light popup showing sample data](screenshots/details-light.png)
@@ -100,13 +100,13 @@ if the Settings window is unavailable. Manual cost setup is still available as
 
 ## Troubleshooting
 
-- **No icon:** confirm GNOME 46 and `State: ACTIVE` using the command above. If
+- **No icon:** confirm GNOME 46 or 50 and `State: ACTIVE` using the command above. If
   extensions are globally disabled, turn them on in the Extensions application.
 - **Unavailable or stale:** run the relevant CLI, sign in again if needed, and
   refresh. Claude's CLI refreshes its own expired credentials.
 - **Codex not found:** a shell version manager may expose Codex only in interactive
   terminals. The collector searches standard user/system install paths and known
-  mise locations. For a custom install, link its stable executable into
+  mise and Homebrew locations. For a custom install, link its stable executable into
   `~/.local/bin/codex`, then log out and back in.
 - **Cost reader missing:** complete the optional setup above, or turn off costs.
 - **After an update:** log out and back in; toggling the extension does not reload
