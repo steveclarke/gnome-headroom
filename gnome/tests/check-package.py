@@ -21,7 +21,7 @@ with zipfile.ZipFile(root / 'build' / (metadata['uuid'] + '.zip')) as bundle:
     assert len(bundle.namelist()) == len(expected)
     assert bundle.testzip() is None
     assert json.loads(bundle.read('metadata.json')) == metadata
-    assert metadata['shell-version'] == ['46']
+    assert metadata['shell-version'] == ['46', '50']
     for name in expected:
         if name.startswith(('collectors/', 'bin/')):
             assert (bundle.getinfo(name).external_attr >> 16) & 0o100, name
@@ -32,4 +32,4 @@ with zipfile.ZipFile(root / 'build' / (metadata['uuid'] + '.zip')) as bundle:
             path = Path(directory) / (name + '.mjs')
             path.write_bytes(content)
             subprocess.run(['node', str(path)], check=True)
-print(f'PASS: exact {len(expected)}-file package, executable helpers, GNOME 46 metadata and five ESM modules')
+print(f'PASS: exact {len(expected)}-file package, executable helpers, GNOME 46+50 metadata and five ESM modules')

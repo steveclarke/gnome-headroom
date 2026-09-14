@@ -1,6 +1,6 @@
 # Development
 
-Target: Ubuntu 24.04 and GNOME Shell 46. Build with `./gnome/build.sh` from
+Targets: Ubuntu 24.04 with GNOME Shell 46, and Ubuntu 26.04 with GNOME Shell 50. Build with `./gnome/build.sh` from
 the repository root. Python 3 and `glib-compile-schemas` are required.
 
 The build copies Model, Pace, Costs, Wire, and Providers into the ZIP and appends

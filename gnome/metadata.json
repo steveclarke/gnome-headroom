@@ -3,7 +3,8 @@
   "name": "Headroom",
   "description": "Claude Code and Codex quota forecasts and local cost estimates.",
   "shell-version": [
-    "46"
+    "46",
+    "50"
   ],
   "version": 4,
   "settings-schema": "org.gnome.shell.extensions.headroom",

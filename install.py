@@ -46,8 +46,8 @@ def check_desktop():
     if not shutil.which('gnome-shell') or not shutil.which('gnome-extensions'):
         raise ValueError('This installer needs an Ubuntu GNOME desktop.')
     version = subprocess.check_output(['gnome-shell', '--version'], text=True)
-    if not re.search(r'\b46(?:\.|\s|$)', version):
-        raise ValueError('Headroom currently supports GNOME 46 (Ubuntu 24.04).')
+    if not re.search(r'\b(?:46|50)(?:\.|\s|$)', version):
+        raise ValueError('Headroom currently supports GNOME 46 (Ubuntu 24.04) and GNOME 50 (Ubuntu 26.04).')
     if not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
         raise ValueError('Run this in a terminal inside your logged-in Ubuntu desktop.')
 
