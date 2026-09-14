@@ -77,6 +77,7 @@ export default class Headroom extends Extension {
         this._preferences = Providers.normalize(this._catalog, raw);
         this._ids = Providers.selected(this._catalog, this._preferences, false, false);
         this._demo = this._settings.get_boolean('demo-mode');
+        this._barWindows = Model.barWindows(this._settings.get_strv('bar-windows'));
         this._buildBar();
         this._buildMenu();
         this._service.configure(this._ids, raw.showCosts, this._demo);
@@ -243,11 +244,12 @@ export default class Headroom extends Extension {
         const now = Date.now();
         for (const [id, value] of this._barLabels) {
             const provider = this._service.usage.get(id);
-            const window = Model.find(provider, 'weekly');
             const fresh = Model.fresh(provider, now);
-            const pace = Pace.evaluate(window, provider?.observedAt, now, fresh);
-            const marker = pace && ['urgent', 'exhausted'].includes(pace.status) ? ' 🔥' : '';
-            value.text = Model.percentage(window, now) + (window && !fresh ? ' !' : marker);
+            value.text = Model.barText(provider, this._barWindows, now, window => {
+                if (!fresh) return ' !';
+                const pace = Pace.evaluate(window, provider?.observedAt, now, fresh);
+                return pace && ['urgent', 'exhausted'].includes(pace.status) ? ' 🔥' : '';
+            });
         }
         this._countdown.text = this._service.footer();
         const structure = JSON.stringify(this._ids.map(id => [id,
