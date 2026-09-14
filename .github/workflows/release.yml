@@ -60,4 +60,4 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$RELEASE_TAG" build/*.zip build/install.py build/SHA256SUMS --verify-tag --title "Headroom $RELEASE_TAG" --notes 'GNOME Shell extension for Ubuntu 24.04 / GNOME 46. Download install.py and run python3 ~/Downloads/install.py --costs, then log out and back in. Existing Claude/Codex logins are reused. The extension ZIP is also available for manual installation. No compilation required. SHA256SUMS is included for download verification.'
+          gh release create "$RELEASE_TAG" build/*.zip build/install.py build/SHA256SUMS --verify-tag --title "Headroom $RELEASE_TAG" --notes 'GNOME Shell extension for Ubuntu 24.04 / GNOME 46 and Ubuntu 26.04 / GNOME 50. Download install.py and run python3 ~/Downloads/install.py --costs, then log out and back in. Existing Claude/Codex logins are reused. The extension ZIP is also available for manual installation. No compilation required. SHA256SUMS is included for download verification.'

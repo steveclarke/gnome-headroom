@@ -6,7 +6,7 @@
     "46",
     "50"
   ],
-  "version": 4,
+  "version": 5,
   "settings-schema": "org.gnome.shell.extensions.headroom",
   "url": "https://github.com/steveclarke/gnome-headroom"
 }
