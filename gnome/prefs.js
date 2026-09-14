@@ -8,7 +8,7 @@ export default class HeadroomPreferences extends ExtensionPreferences {
         const settings = this.getSettings();
         const page = new Adw.PreferencesPage({title: 'Headroom', icon_name: 'view-list-symbolic'});
         const providers = new Adw.PreferencesGroup({title: 'Providers',
-            description: 'Enabled providers collect usage and appear in details. Top bar adds their remaining percentage.'});
+            description: 'Enabled providers collect usage and appear in details. Top bar adds their percentage.'});
         const rows = new Map();
         const names = {claude: 'Claude Code', codex: 'Codex'};
         const connections = [];
@@ -22,6 +22,18 @@ export default class HeadroomPreferences extends ExtensionPreferences {
             settings.bind(`${id}-top-bar`, bar, 'active', Gio.SettingsBindFlags.DEFAULT);
             settings.bind(`${id}-enabled`, bar, 'sensitive', Gio.SettingsBindFlags.GET);
             row.add_row(bar);
+            const choices = ['remaining', 'used'];
+            const show = new Adw.ComboRow({title: 'Show', subtitle: 'Headroom remaining, or the share already used.',
+                model: Gtk.StringList.new(['Remaining', 'Used'])});
+            show.selected = Math.max(0, choices.indexOf(settings.get_string(`${id}-display-mode`)));
+            show.connect('notify::selected', () => {
+                if (show.selected < choices.length) settings.set_string(`${id}-display-mode`, choices[show.selected]);
+            });
+            connections.push(settings.connect(`changed::${id}-display-mode`, () => {
+                show.selected = Math.max(0, choices.indexOf(settings.get_string(`${id}-display-mode`)));
+            }));
+            settings.bind(`${id}-enabled`, show, 'sensitive', Gio.SettingsBindFlags.GET);
+            row.add_row(show);
             const up = new Gtk.Button({icon_name: 'go-up-symbolic', valign: Gtk.Align.CENTER,
                 tooltip_text: `Move ${names[id]} up`});
             const down = new Gtk.Button({icon_name: 'go-down-symbolic', valign: Gtk.Align.CENTER,
