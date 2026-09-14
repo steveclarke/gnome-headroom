@@ -20,6 +20,8 @@ test('bar window choice keeps known IDs in display order and never goes empty', 
 test('short titles come from the duration, not the provider wording', () => {
   assert.equal(model.shortTitle(win('session', 0, 5 * hour)), '5h');
   assert.equal(model.shortTitle(win('weekly', 0, 168 * hour)), '7d');
+  assert.equal(model.shortTitle(win('session', 0, 1.5 * hour)), '90m');
+  assert.equal(model.shortTitle(win('session', 0, .5 * hour)), '30m');
   assert.equal(model.shortTitle({id: 'x', title: 'Custom', used: 0}), 'Custom');
   assert.equal(model.shortTitle(null), '');
 });

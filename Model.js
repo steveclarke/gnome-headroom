@@ -28,9 +28,11 @@ function shortTitle(window) {
   if (!window) return ""
   var ms = window.durationMs
   if (typeof ms === "number" && isFinite(ms) && ms > 0) {
-    var hours = Math.round(ms / 3600000)
+    var minutes = Math.round(ms / 60000)
+    var hours = minutes / 60
     if (hours >= 24 && hours % 24 === 0) return (hours / 24) + "d"
-    if (hours >= 1) return hours + "h"
+    if (hours >= 1 && hours % 1 === 0) return hours + "h"
+    if (minutes >= 1) return minutes + "m"
   }
   return typeof window.title === "string" ? window.title : ""
 }

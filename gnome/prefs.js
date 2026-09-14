@@ -53,7 +53,7 @@ export default class HeadroomPreferences extends ExtensionPreferences {
         page.add(providers);
         const bar = new Adw.PreferencesGroup({title: 'Top bar',
             description: 'Quota windows shown next to each provider icon. With both on, the bar reads "5h 74% · 7d 61%".'});
-        const windows = {session: ['5-hour window', 'Session quota, resets every five hours.'],
+        const windows = {session: ['Session window', 'Short-term quota, usually five hours.'],
             weekly: ['Weekly window', 'Seven-day quota. The default headline.']};
         const chosen = () => settings.get_strv('bar-windows');
         for (const [id, [title, subtitle]] of Object.entries(windows)) {
