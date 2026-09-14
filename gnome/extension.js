@@ -78,9 +78,8 @@ export default class Headroom extends Extension {
         this._ids = Providers.selected(this._catalog, this._preferences, false, false);
         this._demo = this._settings.get_boolean('demo-mode');
         this._barWindows = Model.barWindows(this._settings.get_strv('bar-windows'));
-        const globalMode = this._settings.get_string('display-mode');
         this._modes = new Map(this._catalog.map(p => [p.id,
-            Model.providerMode(globalMode, this._settings.get_string(`${p.id}-display-mode`))]));
+            Model.displayMode(this._settings.get_string(`${p.id}-display-mode`))]));
         this._buildBar();
         this._buildMenu();
         this._service.configure(this._ids, raw.showCosts, this._demo);

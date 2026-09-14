@@ -40,14 +40,6 @@ test('display mode only accepts the two known values; meter fill follows it', ()
   assert.equal(model.meterFill(win('session', .26, hour), 'used'), .26);
   assert.equal(model.meterFill(win('session', 3, hour), 'used'), 1);
 });
-test('a provider override wins; anything else follows the global mode', () => {
-  assert.equal(model.providerMode('used', 'remaining'), 'remaining');
-  assert.equal(model.providerMode('remaining', 'used'), 'used');
-  assert.equal(model.providerMode('used', 'default'), 'used');
-  assert.equal(model.providerMode('used', ''), 'used');
-  assert.equal(model.providerMode('used', undefined), 'used');
-  assert.equal(model.providerMode('bogus', 'bogus'), 'remaining');
-});
 test('bar text keeps a single window plain and labels several, in either mode', () => {
   assert.equal(model.barText(provider, ['weekly'], now), '61%');
   assert.equal(model.barText(provider, ['session'], now, 'remaining'), '74%');

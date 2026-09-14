@@ -22,9 +22,9 @@ export default class HeadroomPreferences extends ExtensionPreferences {
             settings.bind(`${id}-top-bar`, bar, 'active', Gio.SettingsBindFlags.DEFAULT);
             settings.bind(`${id}-enabled`, bar, 'sensitive', Gio.SettingsBindFlags.GET);
             row.add_row(bar);
-            const choices = ['default', 'remaining', 'used'];
-            const show = new Adw.ComboRow({title: 'Show', subtitle: 'Follow the Display setting, or pick one for this provider.',
-                model: Gtk.StringList.new(['Same as Display', 'Remaining', 'Used'])});
+            const choices = ['remaining', 'used'];
+            const show = new Adw.ComboRow({title: 'Show', subtitle: 'Headroom remaining, or the share already used.',
+                model: Gtk.StringList.new(['Remaining', 'Used'])});
             show.selected = Math.max(0, choices.indexOf(settings.get_string(`${id}-display-mode`)));
             show.connect('notify::selected', () => {
                 if (show.selected < choices.length) settings.set_string(`${id}-display-mode`, choices[show.selected]);
@@ -63,19 +63,6 @@ export default class HeadroomPreferences extends ExtensionPreferences {
         reorder();
         connections.push(settings.connect('changed::provider-order', reorder));
         page.add(providers);
-        const display = new Adw.PreferencesGroup({title: 'Display',
-            description: 'Show each quota as the headroom still left, or as the share already used. Each provider can override this under Providers.'});
-        const modes = ['remaining', 'used'];
-        const mode = new Adw.ComboRow({title: 'Show', model: Gtk.StringList.new(['Remaining', 'Used'])});
-        mode.selected = Math.max(0, modes.indexOf(settings.get_string('display-mode')));
-        mode.connect('notify::selected', () => {
-            if (mode.selected < modes.length) settings.set_string('display-mode', modes[mode.selected]);
-        });
-        connections.push(settings.connect('changed::display-mode', () => {
-            mode.selected = Math.max(0, modes.indexOf(settings.get_string('display-mode')));
-        }));
-        display.add(mode);
-        page.add(display);
         const bar = new Adw.PreferencesGroup({title: 'Top bar',
             description: 'Quota windows shown next to each provider icon. With both on, the bar reads "5h 74% · 7d 61%".'});
         const windows = {session: ['5-hour window', 'Session quota, resets every five hours.'],

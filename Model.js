@@ -8,7 +8,7 @@ function fresh(provider, now) {
     && now - provider.observedAt <= 600000
 }
 
-// mode is "remaining" (default: headroom left) or "used" (spent so far).
+// mode is "remaining" (default: headroom left) or "used" (spent so far); chosen per provider.
 function percentage(window, now, mode) {
   if (!window || typeof window.used !== "number" || !isFinite(window.used)) return "—"
   if (window.resetAt > 0 && now >= window.resetAt) return "—"
@@ -17,11 +17,6 @@ function percentage(window, now, mode) {
 }
 
 function displayMode(value) { return value === "used" ? "used" : "remaining" }
-
-// A provider may override the global mode; anything but an explicit choice follows it.
-function providerMode(globalValue, override) {
-  return override === "used" || override === "remaining" ? override : displayMode(globalValue)
-}
 
 // Fraction of the meter to fill for a window in the given mode.
 function meterFill(window, mode) {
