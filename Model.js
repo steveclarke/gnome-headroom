@@ -8,10 +8,20 @@ function fresh(provider, now) {
     && now - provider.observedAt <= 600000
 }
 
-function percentage(window, now) {
+// mode is "remaining" (default: headroom left) or "used" (spent so far).
+function percentage(window, now, mode) {
   if (!window || typeof window.used !== "number" || !isFinite(window.used)) return "—"
   if (window.resetAt > 0 && now >= window.resetAt) return "—"
-  return Math.round(Math.max(0, Math.min(1, 1 - window.used)) * 100) + "%"
+  var used = Math.max(0, Math.min(1, window.used))
+  return Math.round((mode === "used" ? used : 1 - used) * 100) + "%"
+}
+
+function displayMode(value) { return value === "used" ? "used" : "remaining" }
+
+// Fraction of the meter to fill for a window in the given mode.
+function meterFill(window, mode) {
+  var used = Math.max(0, Math.min(1, window.used))
+  return mode === "used" ? used : 1 - used
 }
 
 // Windows the top bar may show, in display order. Unknown IDs are dropped and
@@ -39,14 +49,14 @@ function shortTitle(window) {
 // only when more than one window is shown. A missing window is skipped; with
 // none available the bar shows a dash. decorate(window) may add a per-window
 // suffix such as a stale mark or a flame.
-function barText(provider, windowIds, now, decorate) {
+function barText(provider, windowIds, now, mode, decorate) {
   var parts = []
   var ids = Array.isArray(windowIds) ? windowIds : []
   for (var i = 0; i < ids.length; i++) {
     var window = find(provider, ids[i])
     if (!window) continue
     var suffix = decorate ? decorate(window) || "" : ""
-    parts.push({label: shortTitle(window), text: percentage(window, now) + suffix})
+    parts.push({label: shortTitle(window), text: percentage(window, now, mode) + suffix})
   }
   if (!parts.length) return "—"
   return parts.map(function(part) {

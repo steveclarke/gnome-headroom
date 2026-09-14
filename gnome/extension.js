@@ -78,6 +78,7 @@ export default class Headroom extends Extension {
         this._ids = Providers.selected(this._catalog, this._preferences, false, false);
         this._demo = this._settings.get_boolean('demo-mode');
         this._barWindows = Model.barWindows(this._settings.get_strv('bar-windows'));
+        this._mode = Model.displayMode(this._settings.get_string('display-mode'));
         this._buildBar();
         this._buildMenu();
         this._service.configure(this._ids, raw.showCosts, this._demo);
@@ -245,7 +246,7 @@ export default class Headroom extends Extension {
         for (const [id, value] of this._barLabels) {
             const provider = this._service.usage.get(id);
             const fresh = Model.fresh(provider, now);
-            value.text = Model.barText(provider, this._barWindows, now, window => {
+            value.text = Model.barText(provider, this._barWindows, now, this._mode, window => {
                 if (!fresh) return ' !';
                 const pace = Pace.evaluate(window, provider?.observedAt, now, fresh);
                 return pace && ['urgent', 'exhausted'].includes(pace.status) ? ' 🔥' : '';
@@ -266,12 +267,13 @@ export default class Headroom extends Extension {
             row.window = Model.find(provider, row.windowId);
             row.fresh = Model.fresh(provider, now);
             row.pace = Pace.evaluate(row.window, provider?.observedAt, now, row.fresh);
-            row.value.text = Model.percentage(row.window, now);
+            const percent = Model.percentage(row.window, now, this._mode);
+            row.value.text = percent === '—' ? percent : `${percent} ${this._mode === 'used' ? 'used' : 'left'}`;
             row.reset.text = row.window?.resetAt > 0 ? `Resets ${Pace.duration(row.window.resetAt - now)}` : 'Reset time unavailable';
             const note = Pace.summary(row.pace, now);
             row.warning.text = row.pace && row.pace.status !== 'calm' ?
                 `${row.pace.status === 'caution' ? '⌛' : '🔥'} ${note}`.trim() : '';
-            row.meter.accessible_name = Pace.tooltip(row.pace) || `${row.value.text} remaining`;
+            row.meter.accessible_name = Pace.tooltip(row.pace) || row.value.text;
             if (this._indicator.menu.isOpen) row.meter.queue_repaint();
         }
         if (this._costUI) {
@@ -302,12 +304,14 @@ export default class Headroom extends Extension {
             if (severity === 'critical') context.setSourceRGBA(0.9, 0.24, 0.2, 1);
             else if (severity === 'warning') context.setSourceRGBA(0.77, 0.6, 0.09, 1);
             else color(context, fg, row.fresh ? 0.85 : 0.4);
-            context.rectangle(0, 0, width * Math.max(0, Math.min(1, 1 - row.window.used)), height);
+            context.rectangle(0, 0, width * Model.meterFill(row.window, this._mode), height);
             context.fill();
             const marker = Pace.marker(row.pace);
             if (marker !== null) {
                 color(context, fg);
-                context.rectangle(width * (1 - marker), 0, 1, height);
+                // The marker is the elapsed share of the window; in remaining mode
+                // it counts down from the right, in used mode up from the left.
+                context.rectangle(width * (this._mode === 'used' ? marker : 1 - marker), 0, 1, height);
                 context.fill();
             }
         }
