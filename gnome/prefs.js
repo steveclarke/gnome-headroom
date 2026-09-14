@@ -22,6 +22,18 @@ export default class HeadroomPreferences extends ExtensionPreferences {
             settings.bind(`${id}-top-bar`, bar, 'active', Gio.SettingsBindFlags.DEFAULT);
             settings.bind(`${id}-enabled`, bar, 'sensitive', Gio.SettingsBindFlags.GET);
             row.add_row(bar);
+            const choices = ['default', 'remaining', 'used'];
+            const show = new Adw.ComboRow({title: 'Show', subtitle: 'Follow the Display setting, or pick one for this provider.',
+                model: Gtk.StringList.new(['Same as Display', 'Remaining', 'Used'])});
+            show.selected = Math.max(0, choices.indexOf(settings.get_string(`${id}-display-mode`)));
+            show.connect('notify::selected', () => {
+                if (show.selected < choices.length) settings.set_string(`${id}-display-mode`, choices[show.selected]);
+            });
+            connections.push(settings.connect(`changed::${id}-display-mode`, () => {
+                show.selected = Math.max(0, choices.indexOf(settings.get_string(`${id}-display-mode`)));
+            }));
+            settings.bind(`${id}-enabled`, show, 'sensitive', Gio.SettingsBindFlags.GET);
+            row.add_row(show);
             const up = new Gtk.Button({icon_name: 'go-up-symbolic', valign: Gtk.Align.CENTER,
                 tooltip_text: `Move ${names[id]} up`});
             const down = new Gtk.Button({icon_name: 'go-down-symbolic', valign: Gtk.Align.CENTER,
@@ -52,7 +64,7 @@ export default class HeadroomPreferences extends ExtensionPreferences {
         connections.push(settings.connect('changed::provider-order', reorder));
         page.add(providers);
         const display = new Adw.PreferencesGroup({title: 'Display',
-            description: 'Show each quota as the headroom still left, or as the share already used.'});
+            description: 'Show each quota as the headroom still left, or as the share already used. Each provider can override this under Providers.'});
         const modes = ['remaining', 'used'];
         const mode = new Adw.ComboRow({title: 'Show', model: Gtk.StringList.new(['Remaining', 'Used'])});
         mode.selected = Math.max(0, modes.indexOf(settings.get_string('display-mode')));

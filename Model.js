@@ -18,6 +18,11 @@ function percentage(window, now, mode) {
 
 function displayMode(value) { return value === "used" ? "used" : "remaining" }
 
+// A provider may override the global mode; anything but an explicit choice follows it.
+function providerMode(globalValue, override) {
+  return override === "used" || override === "remaining" ? override : displayMode(globalValue)
+}
+
 // Fraction of the meter to fill for a window in the given mode.
 function meterFill(window, mode) {
   var used = Math.max(0, Math.min(1, window.used))
