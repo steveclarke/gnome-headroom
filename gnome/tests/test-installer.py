@@ -59,10 +59,16 @@ class InstallerTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'without sudo'):
                 installer.check_desktop()
 
-    def test_refuses_unsupported_shell(self):
-        with patch.object(installer.os, 'geteuid', return_value=1000), patch.object(installer.shutil, 'which', return_value='/bin/tool'), patch.object(installer.subprocess, 'check_output', return_value='GNOME Shell 47.0'):
-            with self.assertRaisesRegex(ValueError, 'GNOME 46'):
+    def test_accepts_supported_shell_versions(self):
+        for version in ('GNOME Shell 46.0', 'GNOME Shell 50.1'):
+            with self.subTest(version=version), patch.object(installer.os, 'geteuid', return_value=1000), patch.object(installer.shutil, 'which', return_value='/bin/tool'), patch.object(installer.subprocess, 'check_output', return_value=version), patch.dict(installer.os.environ, {'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/test/bus'}):
                 installer.check_desktop()
+
+    def test_refuses_unsupported_shell(self):
+        for version in ('GNOME Shell 45.0', 'GNOME Shell 47.0', 'GNOME Shell 48.0', 'GNOME Shell 49.0', 'GNOME Shell 51.0'):
+            with self.subTest(version=version), patch.object(installer.os, 'geteuid', return_value=1000), patch.object(installer.shutil, 'which', return_value='/bin/tool'), patch.object(installer.subprocess, 'check_output', return_value=version):
+                with self.assertRaisesRegex(ValueError, 'GNOME 46.*GNOME 50'):
+                    installer.check_desktop()
 
 
 if __name__ == '__main__':
