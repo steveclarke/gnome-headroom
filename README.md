@@ -4,6 +4,8 @@ Claude Code and Codex quotas in your Ubuntu top bar, with reset countdowns,
 forecasts, and optional local cost estimates. Built for **Ubuntu 24.04 / GNOME 46** and
 **Ubuntu 26.04 / GNOME 50**. Other GNOME versions are not supported by this release.
 
+On Pop!_OS with the COSMIC desktop, see [Headroom for the COSMIC panel](cosmic/README.md).
+
 ![Dark popup showing sample data](screenshots/details-dark.png)
 ![Light popup showing sample data](screenshots/details-light.png)
 

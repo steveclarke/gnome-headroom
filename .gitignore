@@ -13,3 +13,6 @@ local/
 .impeccable/
 
 build/
+
+# COSMIC applet build output
+target/

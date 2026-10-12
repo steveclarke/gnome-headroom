@@ -19,6 +19,7 @@ jobs:
       - name: Check logic and collectors
         run: |
           node --test tests/*.test.cjs
+          node --test cosmic/tests/*.test.cjs
           python3 gnome/tests/check-collectors
           python3 gnome/tests/security.py
           python3 gnome/tests/test-collector-regressions.py
